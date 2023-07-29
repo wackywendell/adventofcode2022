@@ -12,6 +12,16 @@ pub enum Hand {
     Scissors,
 }
 
+impl Hand {
+    pub fn next(self) -> Self {
+        match self {
+            Hand::Rock => Hand::Paper,
+            Hand::Paper => Hand::Scissors,
+            Hand::Scissors => Hand::Rock,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Right {
     X,
@@ -40,28 +50,49 @@ impl Winner {
 pub struct Pair(Hand, Right);
 
 impl Pair {
-    pub fn winner(self) -> Winner {
+    fn assume_simple(self) -> Play {
         let Pair(l, r) = self;
-        match (l, r) {
-            (Hand::Rock, Right::Y) => Winner::Right,
-            (Hand::Paper, Right::Z) => Winner::Right,
-            (Hand::Scissors, Right::X) => Winner::Right,
-            (Hand::Rock, Right::X) => Winner::Draw,
-            (Hand::Paper, Right::Y) => Winner::Draw,
-            (Hand::Scissors, Right::Z) => Winner::Draw,
-            (Hand::Rock, Right::Z) => Winner::Left,
-            (Hand::Paper, Right::X) => Winner::Left,
-            (Hand::Scissors, Right::Y) => Winner::Left,
+        let r = match r {
+            Right::X => Hand::Rock,
+            Right::Y => Hand::Paper,
+            Right::Z => Hand::Scissors,
+        };
+        Play(l, r)
+    }
+
+    fn assume_solution(self) -> Play {
+        let Pair(l, r) = self;
+        let rh = match r {
+            Right::X => l.next().next(),
+            Right::Y => l,
+            Right::Z => l.next(),
+        };
+        Play(l, rh)
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Play(Hand, Hand);
+
+impl Play {
+    pub fn winner(self) -> Winner {
+        let Play(l, r) = self;
+        if l == r {
+            Winner::Draw
+        } else if l.next() == r {
+            Winner::Right
+        } else {
+            Winner::Left
         }
     }
 
     pub fn score(self) -> i64 {
         let winner = self.winner();
-        let Pair(_l, r) = self;
+        let Play(_l, r) = self;
         let pair_score = match r {
-            Right::X => 1,
-            Right::Y => 2,
-            Right::Z => 3,
+            Hand::Rock => 1,
+            Hand::Paper => 2,
+            Hand::Scissors => 3,
         };
 
         debug!("{} {:?} {:?} {}", pair_score, self, winner, winner.score());
@@ -103,11 +134,19 @@ impl Solver for Day02 {
     }
 
     fn part_one(&self) -> String {
-        self.0.iter().map(|p| p.score()).sum::<i64>().to_string()
+        self.0
+            .iter()
+            .map(|p| p.assume_simple().score())
+            .sum::<i64>()
+            .to_string()
     }
 
     fn part_two(&self) -> String {
-        unimplemented!()
+        self.0
+            .iter()
+            .map(|p| p.assume_solution().score())
+            .sum::<i64>()
+            .to_string()
     }
 }
 
@@ -129,10 +168,23 @@ mod tests {
 
         let pairs = &solver.0;
         assert_eq!(pairs.len(), 3);
-        assert_eq!(pairs[0].score(), 8);
-        assert_eq!(pairs[1].score(), 1);
-        assert_eq!(pairs[2].score(), 6);
+        assert_eq!(pairs[0].assume_simple().score(), 8);
+        assert_eq!(pairs[1].assume_simple().score(), 1);
+        assert_eq!(pairs[2].assume_simple().score(), 6);
 
         assert_eq!(solver.part_one(), "15");
+    }
+
+    #[test]
+    pub fn solution() {
+        let solver = Day02::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+
+        let pairs = &solver.0;
+        assert_eq!(pairs.len(), 3);
+        assert_eq!(pairs[0].assume_solution().score(), 4);
+        assert_eq!(pairs[1].assume_solution().score(), 1);
+        assert_eq!(pairs[2].assume_solution().score(), 7);
+
+        assert_eq!(solver.part_two(), "12");
     }
 }
