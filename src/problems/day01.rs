@@ -47,6 +47,7 @@ impl Elves {
 
         let mut out: Vec<_> = maxes.into_iter().map(|Reverse(c)| c).collect();
         out.sort();
+        out.reverse();
         out
     }
 }
