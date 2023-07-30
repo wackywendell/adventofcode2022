@@ -1,4 +1,9 @@
-use std::{io::Read, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    io::Read,
+    str::FromStr,
+};
 
 use super::{solutions::parse_lines, Solver};
 
@@ -77,6 +82,42 @@ impl FromStr for Rucksack {
 
 pub struct Day03(Vec<Rucksack>);
 
+impl Day03 {
+    pub fn find_common<'r, I: Iterator<Item = &'r Rucksack>>(group: I) -> Option<Item> {
+        let mut counts = HashMap::new();
+
+        let mut n = 0;
+        for r in group {
+            let mut seen = HashSet::new();
+            for &item in &r.items {
+                if seen.contains(&item) {
+                    continue;
+                }
+                let count = counts.entry(item).or_insert(0);
+                *count += 1;
+                seen.insert(item);
+            }
+            n += 1;
+        }
+
+        for (item, count) in counts {
+            if count == n {
+                log::debug!("Found common item {:?}, priority {}", item, item.priority());
+                return Some(item);
+            }
+        }
+
+        None
+    }
+
+    pub fn badge_priorities(&self) -> impl Iterator<Item = i64> + '_ {
+        self.0.as_slice().chunks(3).map(|group| {
+            let c = Self::find_common(group.iter()).unwrap();
+            c.priority()
+        })
+    }
+}
+
 impl Solver for Day03 {
     fn from_input(input: impl Read) -> anyhow::Result<Self> {
         let rucksacks = parse_lines::<Rucksack>(input)?;
@@ -95,7 +136,8 @@ impl Solver for Day03 {
     }
 
     fn part_two(&self) -> String {
-        unimplemented!()
+        let psum = self.badge_priorities().sum::<i64>();
+        format!("{}", psum)
     }
 }
 
@@ -128,5 +170,13 @@ mod tests {
 
         let s = solver.part_one();
         assert_eq!(&s, "157");
+    }
+
+    #[test]
+    pub fn groups() {
+        let solver = Day03::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let priorities = solver.badge_priorities().collect::<Vec<i64>>();
+        assert_eq!(priorities, vec![18, 52]);
+        assert_eq!(solver.badge_priorities().sum::<i64>(), 70);
     }
 }
