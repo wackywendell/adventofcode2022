@@ -1,19 +1,60 @@
 use std::io::Read;
 
-use super::Solver;
+use super::{solutions::parse_lines, Solver};
 
-pub struct Day0;
+pub struct Day00(Vec<i64>);
 
-impl Solver for Day0 {
-    fn from_input(_input: impl Read) -> anyhow::Result<Self> {
-        Ok(Day0)
+impl Day00 {
+    pub fn max(&self) -> i64 {
+        self.0.iter().copied().max().unwrap_or_default()
+    }
+
+    pub fn sum(&self) -> i64 {
+        self.0.iter().copied().sum::<i64>()
+    }
+}
+
+impl Solver for Day00 {
+    fn from_input(input: impl Read) -> anyhow::Result<Self> {
+        let items = parse_lines::<i64>(input)?;
+
+        Ok(Day00(items))
     }
 
     fn part_one(&self) -> String {
-        unimplemented!();
+        self.max();
+        unimplemented!()
     }
 
     fn part_two(&self) -> String {
+        self.sum();
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_log::test;
+
+    use crate::problems::testfns::unindent;
+
+    use super::*;
+
+    const EXAMPLE: &str = r"
+        1
+        9
+        4
+    ";
+
+    #[test]
+    fn test_part_one() {
+        let day = Day00::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        assert_eq!(day.max(), 9);
+    }
+
+    #[test]
+    fn test_part_two() {
+        let day = Day00::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        assert_eq!(day.sum(), 14);
     }
 }
