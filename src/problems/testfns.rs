@@ -1,10 +1,10 @@
 use anyhow::bail;
 
-pub fn unindent(s: &str) -> anyhow::Result<String> {
+pub fn unindented(s: &str) -> anyhow::Result<String> {
     let mut input = String::new();
 
     let mut indent = None;
-    for (n, l) in s.lines().enumerate() {
+    for l in s.lines() {
         if indent.is_none() && l.trim().is_empty() {
             continue;
         }
@@ -21,14 +21,47 @@ pub fn unindent(s: &str) -> anyhow::Result<String> {
             }
         };
 
-        let to_cut = indent.min(l.len());
+        let l = unindent_line(l, indent)?;
+        input.push_str(l);
+        input.push('\n');
+    }
 
-        let spaces = &l[..to_cut];
-        if !spaces.chars().all(|c| c == ' ') {
-            bail!("Line {} has inconsistent indentation: {}", n + 1, l);
+    while let Some(end) = input.pop() {
+        if end == '\n' {
+            continue;
+        }
+        input.push(end);
+        break;
+    }
+
+    Ok(input)
+}
+
+pub fn unindent_line(s: &str, indent: usize) -> anyhow::Result<&str> {
+    let l = s.trim_end_matches('\n');
+
+    let to_cut = indent.min(l.len());
+
+    let spaces = &l[..to_cut];
+    if !spaces.chars().all(|c| c == ' ') {
+        bail!("Line has inconsistent indentation: {}", l);
+    }
+
+    Ok(&l[to_cut..])
+}
+
+pub fn unindent(s: &str, indent: usize) -> anyhow::Result<String> {
+    let mut input = String::new();
+
+    for l in s.lines() {
+        if l.trim().is_empty() {
+            if !input.is_empty() {
+                input.push('\n');
+            }
+            continue;
         }
 
-        let l = &l[to_cut..];
+        let l = unindent_line(l, indent)?;
         input.push_str(l);
         input.push('\n');
     }
@@ -49,7 +82,7 @@ pub mod tests {
     use super::*;
 
     #[test]
-    fn test_unindent() {
+    fn test_unindented() {
         let input = "
             Hello
             
@@ -61,6 +94,22 @@ pub mod tests {
 
         let expected = "Hello\n\nWorld\nHello\n\nAgain";
 
-        assert_eq!(unindent(input).unwrap(), expected);
+        assert_eq!(unindented(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_unindent() {
+        let input = "
+              Hello
+            
+            World
+                Hello
+
+            Again
+        ";
+
+        let expected = "  Hello\n\nWorld\n    Hello\n\nAgain";
+
+        assert_eq!(unindent(input, 12).unwrap(), expected);
     }
 }

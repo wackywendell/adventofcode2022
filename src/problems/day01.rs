@@ -70,7 +70,7 @@ impl Solver for Day01 {
 
 #[cfg(test)]
 mod tests {
-    use super::super::testfns::unindent;
+    use super::super::testfns::unindented;
     use super::*;
 
     const EXAMPLE: &str = r"
@@ -92,14 +92,14 @@ mod tests {
 
     #[test]
     pub fn parse() {
-        let elves = Elves::read(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let elves = Elves::read(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
 
         assert_eq!(elves.calories.len(), 5);
     }
 
     #[test]
     pub fn basic() {
-        let elves = Elves::read(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let elves = Elves::read(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
         let maxes = elves.maxes(3);
 
         assert_eq!(maxes, vec![24000, 11000, 10000]);
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     pub fn solving() {
-        let solver = Day01::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let solver = Day01::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
 
         let out = solver.part_one();
         assert_eq!(out, "24000");

@@ -154,7 +154,7 @@ impl Solver for Day02 {
 mod tests {
     use test_log::test;
 
-    use super::super::testfns::unindent;
+    use super::super::testfns::unindented;
     use super::*;
 
     const EXAMPLE: &str = r"
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     pub fn basic() {
-        let solver = Day02::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let solver = Day02::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
 
         let pairs = &solver.0;
         assert_eq!(pairs.len(), 3);
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     pub fn solution() {
-        let solver = Day02::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let solver = Day02::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
 
         let pairs = &solver.0;
         assert_eq!(pairs.len(), 3);

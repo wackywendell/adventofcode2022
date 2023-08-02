@@ -145,7 +145,7 @@ impl Solver for Day03 {
 mod tests {
     use test_log::test;
 
-    use super::super::testfns::unindent;
+    use super::super::testfns::unindented;
     use super::*;
 
     const EXAMPLE: &str = r"
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     pub fn basic() {
-        let solver = Day03::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let solver = Day03::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
         let rucksacks = &solver.0;
 
         let scores = vec![16, 38, 42, 22, 20, 19];
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     pub fn groups() {
-        let solver = Day03::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let solver = Day03::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
         let priorities = solver.badge_priorities().collect::<Vec<i64>>();
         assert_eq!(priorities, vec![18, 52]);
         assert_eq!(solver.badge_priorities().sum::<i64>(), 70);

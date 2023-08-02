@@ -77,7 +77,7 @@ impl Solver for Day04 {
 mod tests {
     use test_log::test;
 
-    use crate::problems::testfns::unindent;
+    use crate::problems::testfns::unindented;
 
     use super::*;
 
@@ -92,13 +92,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let day = Day04::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let day = Day04::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
         assert_eq!(day.contained_pairs(), 2);
     }
 
     #[test]
     fn test_part_two() {
-        let day = Day04::from_input(unindent(EXAMPLE).unwrap().as_bytes()).unwrap();
+        let day = Day04::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
         assert_eq!(day.overlapping_pairs(), 4);
     }
 }
