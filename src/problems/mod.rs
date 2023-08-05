@@ -3,6 +3,7 @@ mod day02;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
 mod solutions;
 mod template;
 #[cfg(test)]
@@ -19,6 +20,7 @@ pub use day02::Day02;
 pub use day03::Day03;
 pub use day04::Day04;
 pub use day05::Day05;
+pub use day06::Day06;
 
 fn unerr<S: Solver + 'static>(input: impl Read) -> anyhow::Result<Box<dyn Solver>> {
     Ok(Box::new(S::from_input(input).context("Failed to parse")?))
@@ -31,6 +33,7 @@ pub fn solver(day: usize, input: impl Read) -> anyhow::Result<Box<dyn Solver>> {
         3 => unerr::<Day03>(input)?,
         4 => unerr::<Day04>(input)?,
         5 => unerr::<Day05>(input)?,
+        6 => unerr::<Day06>(input)?,
         _ => bail!("No solution for day {}", day),
     })
 }
