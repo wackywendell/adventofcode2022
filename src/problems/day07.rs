@@ -10,6 +10,11 @@ use anyhow::{bail, Context};
 
 use super::Solver;
 
+const SMALL_FILE_THRESHOLD: i64 = 100_000;
+const FILE_SYSTEM_SIZE: i64 = 70_000_000;
+const SPACE_NEEDED: i64 = 30_000_000;
+const MAX_SIZE: i64 = FILE_SYSTEM_SIZE - SPACE_NEEDED;
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LsOutput {
     File(String, i64),
@@ -66,6 +71,12 @@ impl Display for Path {
             write!(f, "/{part}")?
         }
         Ok(())
+    }
+}
+
+impl Path {
+    pub fn root() -> Self {
+        Path(vec![])
     }
 }
 
@@ -244,15 +255,47 @@ impl Day07 {
 
         let mut sum = 0;
         for (path, &size) in &sizes {
-            if let Some(size) = size {
-                if size < cutoff {
-                    log::debug!("{}: {}", path, size);
-                    sum += size;
-                }
+            let size = size.unwrap();
+            if size < cutoff {
+                log::debug!("{}: {}", path, size);
+                sum += size;
             }
         }
 
         sum
+    }
+
+    // Find the smallest directory that has at least `threshold` in it
+    pub fn least_above_threshold(&self, threshold: i64) -> Option<(i64, Path)> {
+        let sizes = self.0.total_sizes();
+
+        let mut min = None;
+        for (path, &size) in &sizes {
+            let size = size.unwrap();
+            if size < threshold {
+                continue;
+            }
+            if let Some((min_size, _)) = min {
+                if min_size <= size {
+                    continue;
+                }
+            }
+
+            min = Some((size, path.clone()));
+        }
+
+        min
+    }
+
+    // Find the smallest directory such that the total goes below max
+    pub fn free_below(&self, max: i64) -> Option<(i64, Path)> {
+        let sizes = self.0.total_sizes();
+        let used = sizes.get(&Path::root()).unwrap().unwrap();
+        if used < max {
+            return None;
+        }
+        let needed = used - max;
+        self.least_above_threshold(needed)
     }
 }
 
@@ -268,12 +311,13 @@ impl Solver for Day07 {
     }
 
     fn part_one(&self) -> String {
-        let sum = self.small_dir_sum(100_000);
+        let sum = self.small_dir_sum(SMALL_FILE_THRESHOLD);
         format!("{sum}")
     }
 
     fn part_two(&self) -> String {
-        unimplemented!()
+        let (size, _p) = self.free_below(MAX_SIZE).unwrap();
+        format!("{size}")
     }
 }
 
@@ -319,8 +363,8 @@ mod tests {
         let fs = session.run();
         let sizes = fs.total_sizes();
         assert_eq!(sizes.len(), 4);
-        let p = Path::from_str("/a/e").unwrap();
-        assert_eq!(sizes[&p], Some(584));
+        let p = Path::root();
+        assert_eq!(sizes[&p], Some(48381165));
         let p = Path::from_str("/a/e").unwrap();
         assert_eq!(sizes[&p], Some(584));
     }
@@ -330,12 +374,15 @@ mod tests {
         let session = Session::from_str(unindented(EXAMPLE).unwrap().as_str()).unwrap();
         let fs = session.run();
         let day = Day07(fs);
-        assert_eq!(day.small_dir_sum(100_000), 95437);
+        assert_eq!(day.small_dir_sum(SMALL_FILE_THRESHOLD), 95437);
     }
 
     #[test]
     fn test_part_two() {
-        // let day = Day07::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
-        // assert_eq!(day.sum(), 14);
+        let session = Session::from_str(unindented(EXAMPLE).unwrap().as_str()).unwrap();
+        let fs = session.run();
+        let day = Day07(fs);
+        let (sz, _p) = day.free_below(MAX_SIZE).unwrap();
+        assert_eq!(sz, 24933642);
     }
 }
