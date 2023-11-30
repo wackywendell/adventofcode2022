@@ -61,14 +61,17 @@ impl Computer {
                 }
                 Instruction::Addx(n) => self.register += n,
             }
+            log::info!("{} added: {} - {:?}", self.cycles, self.register, op);
             return Some(self.register);
         }
 
         let op = self.instructions.pop_front()?;
         if op == Instruction::Noop {
+            log::info!("{}  noop: {} - {:?}", self.cycles, self.register, op);
             return Some(self.register);
         }
 
+        log::info!("{}   pop: {} - {:?}", self.cycles, self.register, op);
         self.stack = Some(op);
         Some(self.register)
     }
@@ -76,8 +79,9 @@ impl Computer {
     pub fn cycle(&mut self) -> Option<bool> {
         let reg = self.register;
         self.step()?;
-        let loc = (self.cycles % self.width) as i64;
-        Some(loc.abs_diff(reg) <= 1)
+        let loc = ((self.cycles - 1) % self.width + 1) as i64;
+        log::info!("-> {} / {}: {}", loc, reg, loc.abs_diff(reg) <= 1);
+        Some(loc.abs_diff(reg + 1) <= 1)
     }
 
     pub fn draw(&mut self) -> String {
@@ -141,7 +145,8 @@ impl Solver for Day10 {
     }
 
     fn part_two(&self) -> String {
-        unimplemented!()
+        let mut day = self.clone();
+        format!("\n{}", day.0.draw())
     }
 }
 
@@ -340,12 +345,12 @@ mod tests {
     }
 
     const EXPECTED_1: &str = r"
-        ##..##..#..##...##.##..##..##..##..##..#
-        ###..####..###...###...####..####..###..
-        ##.....#####...###.....####.....##.....#
-        ####.....##.#......#####.....####.......
-        ###.##.....##.###......######......##.#.
-        ###.##.......####.#........########.....
+        ##..##..##..##..##..##..##..##..##..##..
+        ###...###...###...###...###...###...###.
+        ####....####....####....####....####....
+        #####.....#####.....#####.....#####.....
+        ######......######......######......####
+        #######.......#######.......#######.....
     ";
 
     #[test]
