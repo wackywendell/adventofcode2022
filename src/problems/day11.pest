@@ -1,0 +1,37 @@
+number = {            // To recognize a number...
+    ASCII_DIGIT+       //   take as many ASCII digits as possible (at least one).
+}
+
+COLON = _{":"}
+COMMA_SPACE = _{", "}
+SPACE = _{" "}
+
+MONKEY = _{"Monkey "}
+
+monkeyId = {
+    MONKEY ~ number ~ COLON
+}
+
+
+STARTING = _{"  Starting items: "}
+
+startingLine = {
+    STARTING ~ number ~ (COMMA_SPACE ~ number)*
+}
+
+OPERATION = _{"  Operation: new = old "}
+
+
+NEWLINE = _{"\n"}
+
+Monkey = {
+    monkeyId ~ NEWLINE ~ startingLine
+}
+
+// Monkey 0:
+//   Starting items: 79, 98
+//   Operation: new = old * 19
+//   Test: divisible by 23
+//     If true: throw to monkey 2
+//     If false: throw to monkey 3
+
