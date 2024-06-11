@@ -19,13 +19,19 @@ startingLine = {
     STARTING ~ number ~ (COMMA_SPACE ~ number)*
 }
 
-OPERATION = _{"  Operation: new = old "}
+OPERATION_INIT = _{"  Operation: new = old "}
+operation = {"*" | "+" | "-" | "/"}
+
+operationLine = {
+    OPERATION_INIT ~ operation ~ SPACE ~ number
+}
+
 
 
 NEWLINE = _{"\n"}
 
 Monkey = {
-    monkeyId ~ NEWLINE ~ startingLine
+    monkeyId ~ NEWLINE ~ startingLine ~ NEWLINE ~ operationLine
 }
 
 // Monkey 0:

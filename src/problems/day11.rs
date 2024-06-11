@@ -1,13 +1,50 @@
-use std::io::Read;
+use std::{io::Read, str::FromStr};
 
 use super::{solutions::parse_lines, Solver};
 
 use pest::{iterators::Pair, Parser};
+
 use pest_derive::Parser;
 
 #[derive(Parser)]
 #[grammar = "problems/day11.pest"]
 pub struct MonkeyParser;
+
+// mod ast {
+//     use super::{Operation, Rule};
+//     use pest::Span;
+
+//     fn span_into_str(span: Span) -> &str {
+//         span.as_str()
+//     }
+
+//     #[derive(Debug, FromPest)]
+//     #[pest_ast(rule(Rule::number))]
+//     pub struct number {
+//         #[pest_ast(outer(with(span_into_str), with(str::parse), with(Result::unwrap)))]
+//         pub value: i64,
+//     }
+
+//     #[derive(Debug, FromPest)]
+//     #[pest_ast(rule(Rule::monkeyId))]
+//     pub struct monkeyId {
+//         pub value: number,
+//     }
+
+//     #[derive(Debug, FromPest)]
+//     #[pest_ast(rule(Rule::startingLine))]
+//     pub struct startingLine {
+//         pub items: Vec<number>,
+//     }
+
+//     #[derive(Debug, FromPest)]
+//     #[pest_ast(rule(Rule::operationLine))]
+//     pub struct operationLine<'a> {
+//         #[pest_ast(outer(with(span_into_str)))]
+//         operation: &'a str,
+//         operand: number,
+//     }
+// }
 
 pub struct Day11(Vec<i64>);
 
@@ -41,8 +78,20 @@ impl Solver for Day11 {
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub enum Operation {
-    ADD,
-    MUL,
+    Add,
+    Mul,
+}
+
+impl FromStr for Operation {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "+" => Ok(Operation::Add),
+            "*" => Ok(Operation::Mul),
+            _ => anyhow::bail!("Unknown operation: {}", s),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -54,6 +103,15 @@ pub struct Monkey {
     test: i64,
     true_branch: i64,
     false_branch: i64,
+}
+
+impl FromStr for Monkey {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let pair = MonkeyParser::parse(Rule::Monkey, s)?.next().unwrap();
+        process(pair)
+    }
 }
 
 fn to_number(pair: Pair<Rule>) -> anyhow::Result<i64> {
@@ -89,11 +147,31 @@ fn process(pair: Pair<Rule>) -> anyhow::Result<Monkey> {
         .map(to_number)
         .collect::<anyhow::Result<Vec<_>>>()?;
 
+    let operation_line = lines
+        .next()
+        .ok_or(anyhow::format_err!("Expected OperationLine"))?;
+
+    if operation_line.as_rule() != Rule::operationLine {
+        anyhow::bail!("Expected OperationLine, got {:?}", operation_line.as_rule());
+    }
+
+    let mut op_elements = operation_line.into_inner();
+    let operation = op_elements
+        .next()
+        .ok_or(anyhow::format_err!("Expected Operation"))?
+        .as_str()
+        .parse::<Operation>()?;
+
+    let op_string = op_elements
+        .next()
+        .ok_or(anyhow::format_err!("Expected Operation"))?;
+    let operand = to_number(op_string)?;
+
     Ok(Monkey {
         id,
         starting_items,
-        operation: Operation::ADD,
-        operand: 0,
+        operation,
+        operand,
         test: 0,
         true_branch: 0,
         false_branch: 0,
@@ -148,8 +226,16 @@ Monkey 3:
     fn test_parser() {
         let basic_input = r"
 Monkey 0:
-  Starting items: 79, 98";
-        let parsed = MonkeyParser::parse(Rule::Monkey, basic_input.trim()).expect("Should pass");
+  Starting items: 79, 98
+  Operation: new = old * 19";
+        let parsed = match MonkeyParser::parse(Rule::Monkey, basic_input.trim()) {
+            Ok(parsed) => parsed,
+            Err(e) => {
+                // println!("e1:\n{:#?}\n\n", e);
+                // println!("e2:\n{}\n\n", e);
+                panic!("{}", e);
+            }
+        };
 
         let parsed: Vec<_> = parsed.collect();
         for pair in &parsed {
@@ -162,7 +248,8 @@ Monkey 0:
             Monkey {
                 id: 0,
                 starting_items: vec![79, 98],
-                operation: Operation::ADD,
+                operation: Operation::Mul,
+                operand: 19,
                 test: 0,
                 true_branch: 0,
                 false_branch: 0,
