@@ -5,6 +5,7 @@ number = {            // To recognize a number...
 COLON = _{":"}
 COMMA_SPACE = _{", "}
 SPACE = _{" "}
+NEWLINE = _{"\n"}
 
 MONKEY = _{"Monkey "}
 
@@ -21,17 +22,38 @@ startingLine = {
 
 OPERATION_INIT = _{"  Operation: new = old "}
 operation = {"*" | "+" | "-" | "/"}
+old = {"old"}
 
 operationLine = {
-    OPERATION_INIT ~ operation ~ SPACE ~ number
+    OPERATION_INIT ~ operation ~ SPACE ~ (number | old)
 }
 
 
+TEST_INIT = _{"  Test: divisible by "}
+THROW_TRUE = _{"    If true: throw to monkey "}
+THROW_FALSE = _{"    If false: throw to monkey "}
 
-NEWLINE = _{"\n"}
+throwLineTrue = {
+    THROW_TRUE ~ number
+}
+throwLineFalse = {
+    THROW_FALSE ~ number
+}
+
+
+testLine = {
+    TEST_INIT ~ number ~ NEWLINE
+    ~ THROW_TRUE ~ number ~ NEWLINE
+    ~ THROW_FALSE ~ number
+}
+
 
 Monkey = {
-    monkeyId ~ NEWLINE ~ startingLine ~ NEWLINE ~ operationLine
+    monkeyId ~ NEWLINE ~ startingLine ~ NEWLINE ~ operationLine ~ NEWLINE ~ testLine
+}
+
+Monkeys = {
+    SOI ~ Monkey ~ (NEWLINE ~ NEWLINE ~ Monkey)* ~ EOI
 }
 
 // Monkey 0:

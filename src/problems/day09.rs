@@ -3,7 +3,7 @@ use std::{collections::HashSet, io::Read, str::FromStr};
 use adventofcode2022::{Compass, Position};
 use anyhow::{anyhow, bail};
 
-use super::Solver;
+use super::{solutions::parse_from_read, Solver};
 
 pub struct Instructions(Vec<(Compass, usize)>);
 
@@ -120,10 +120,7 @@ pub struct Day09(Instructions);
 
 impl Solver for Day09 {
     fn from_input(input: impl Read) -> anyhow::Result<Self> {
-        let mut s = String::new();
-        let mut input = input;
-        input.read_to_string(&mut s)?;
-        let instructions: Instructions = s.parse()?;
+        let instructions: Instructions = parse_from_read(input)?;
 
         Ok(Day09(instructions))
     }
