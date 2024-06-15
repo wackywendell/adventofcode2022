@@ -12,15 +12,7 @@ use super::{solutions::parse_from_read, Solver};
 
 pub struct Day12(Grid);
 
-impl Day12 {
-    // pub fn max(&self) -> i64 {
-    //     self.0.iter().copied().max().unwrap_or_default()
-    // }
-
-    // pub fn sum(&self) -> i64 {
-    //     self.0.iter().copied().sum::<i64>()
-    // }
-}
+impl Day12 {}
 
 impl Solver for Day12 {
     fn from_input(input: impl Read) -> anyhow::Result<Self> {
@@ -29,14 +21,15 @@ impl Solver for Day12 {
     }
 
     fn part_one(&self) -> String {
-        let path = self.0.shortest_path();
+        let path = self.0.shortest_path_from_start();
         let steps = path.len() - 1;
         format!("{steps}")
     }
 
     fn part_two(&self) -> String {
-        // self.sum();
-        unimplemented!()
+        let path = self.0.shortest_path_from_lowest();
+        let steps = path.len() - 1;
+        format!("{steps}")
     }
 }
 
@@ -142,17 +135,38 @@ impl Grid {
         neighbors
     }
 
-    pub fn shortest_path(&self) -> Vec<Position> {
+    pub fn shortest_path_from_start(&self) -> Vec<Position> {
+        self.shortest_path(vec![self.start])
+    }
+
+    pub fn shortest_path_from_lowest(&self) -> Vec<Position> {
+        let mut starts = Vec::new();
+        let lowest = self[self.start];
+        for (r, row) in self.rows.iter().enumerate() {
+            for (c, &h) in row.iter().enumerate() {
+                if h > lowest {
+                    continue;
+                }
+                starts.push(Position(c as i64, r as i64));
+            }
+        }
+
+        self.shortest_path(starts)
+    }
+
+    pub fn shortest_path(&self, starts: Vec<Position>) -> Vec<Position> {
         // Position -> (Shortest distance, prev)
         let mut visited: HashMap<Position, (i64, Option<Position>)> = HashMap::new();
         let mut queue = BinaryHeap::new();
 
-        queue.push(Visited {
-            dist: 0,
-            height: 0,
-            prev: None,
-            pos: self.start,
-        });
+        for &start in &starts {
+            queue.push(Visited {
+                dist: 0,
+                height: 0,
+                prev: None,
+                pos: start,
+            });
+        }
 
         while let Some(Visited {
             dist,
@@ -301,11 +315,21 @@ mod tests {
     #[test]
     fn test_shortest_path() {
         let grid = example();
-        let path = grid.shortest_path();
+        let path = grid.shortest_path_from_start();
         // should be done in 31 steps = 32 positions
         assert_eq!(path.len(), 32);
         assert_eq!(path[0], grid.start);
         assert_eq!(path[31], grid.goal);
+    }
+
+    #[test]
+    fn shortest_path_from_lowest() {
+        let grid = example();
+        let path = grid.shortest_path_from_lowest();
+        // should be done in 31 steps = 32 positions
+        assert_eq!(path.len(), 30);
+        assert_eq!(grid[path[0]], 0);
+        assert_eq!(path[29], grid.goal);
     }
 
     #[test]
@@ -314,9 +338,9 @@ mod tests {
         assert_eq!(day.part_one(), "31");
     }
 
-    // #[test]
-    // fn test_part_two() {
-    //     let day = Day12::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
-    //     assert_eq!(day.sum(), 14);
-    // }
+    #[test]
+    fn test_part_two() {
+        let day = Day12::from_input(unindented(EXAMPLE).unwrap().as_bytes()).unwrap();
+        assert_eq!(day.part_two(), "29");
+    }
 }
